@@ -43,7 +43,11 @@ thewe.alterState = function(alter) {
 thewe.computeState = function() {
 	var state = $H()
 
-	thewe.getStateKeys().sort().each(function(key) { // $todo: check sort function
+	var numCompare = function(x, y) {
+		return x - y
+	}
+
+	thewe.getStateKeys().sort(numCompare).each(function(key) {
 		eval('var alter = ' + wave.getState().get(key))
 
 		var it
