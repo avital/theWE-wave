@@ -37,7 +37,7 @@ thewe.getStateKeys = function() {
 }
 
 thewe.alterState = function(alter) {
-	wave.getState().submitValue(thewe.getStateKeys().max() + Math.random(), alter.toSource())
+	wave.getState().submitValue(thewe.getStateKeys().max() + Math.random(), alter.toString())
 }
 
 thewe.computeState = function() {
