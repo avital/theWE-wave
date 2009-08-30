@@ -127,13 +127,12 @@ we.computeState = function() {
 }
 
 function main() {
-	initialize()
-
 	if (wave && wave.isInWaveContainer()) {
 		wave.setStateCallback(function() {
 			if (!we.isEvaled) {
 				eval(wave.getState()._view)
 				we.isEvaled = true
+				initialize()
 			}
 
 			we.state = we.computeState()
