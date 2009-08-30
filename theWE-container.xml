@@ -11,8 +11,8 @@
 	<Content type="html">
 		<![CDATA[
 			<script type="text/javascript" src="http://wave-api.appspot.com/public/wave.js"></script>
-			<script type="text/javascript" src="http://wave.thewe.net/gadgets/textbox/mootools-1.2.3-core.js"></script>
-			<script type="text/javascript" src="http://wave.thewe.net/gadgets/textbox/thewe.js"></script>
+			<script type="text/javascript" src="http://wave.thewe.net/gadgets/theWE-wave/mootools-1.2.3-core.js"></script>
+			<script type="text/javascript" src="http://wave.thewe.net/gadgets/theWE-wave/thewe.js"></script>
 		]]>
 	</Content>
 </Module>
