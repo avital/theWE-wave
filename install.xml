@@ -1,8 +1,8 @@
 <extension location="Toolbar">
-  <info id="safecounter"
-        text="Concurrent-Safe Counter"
-        description="Insert a concurrent-safe counter gadget."
+  <info id="textbox"
+        text="Textbox"
+        description="Insert a textbox."
         imageUrl="http://wave-api-dmo.appspot.com/public/simplemap/whereicon.png"/>
       <insertGadget
-        url="http://wave.thewe.net/gadgets/safecounter/safecounter.xml"/>
+        url="http://wave.thewe.net/gadgets/textbox/textbox.xml"/>
 </extension>

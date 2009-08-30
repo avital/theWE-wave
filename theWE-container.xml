@@ -1,0 +1,18 @@
+<Module>
+	<ModulePrefs
+	title="Textbox"
+	height="50"
+	description="Textbox based on theWE."
+	author="Avital Oliver"
+	author_email="avital@thewe.net">
+		<Require feature="rpc"/>
+	</ModulePrefs>
+
+	<Content type="html">
+		<![CDATA[
+			<script type="text/javascript" src="http://wave-api.appspot.com/public/wave.js"></script>
+			<script type="text/javascript" src="http://wave.thewe.net/gadgets/textbox/mootools-1.2.3-core.js"></script>
+			<script type="text/javascript" src="http://wave.thewe.net/gadgets/textbox/thewe.js"></script>
+		]]>
+	</Content>
+</Module>

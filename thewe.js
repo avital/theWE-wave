@@ -1,14 +1,4 @@
-Array.implement({
-	max: function() {
-		var result = 0
-
-		this.each(function(val) {
-			result = Math.max(result, val)
-		})  
-    
-		return result
-	}
-})
+we = {}
 
 $not = function(f) {
 	return function(x) {
@@ -22,40 +12,118 @@ String.implement({
 	}
 })
 
-$begins = function(pre) {
+$begins = function(prefixes) {
+	prefixes = $splat(prefixes)
+
 	return function(str) {
-		return str.beginsWith(pre)
+		return prefixes.some(function(prefix) {
+			return str.beginsWith(prefix)
+		})
 	}
 }
 
-
-
-thewe = {}
-
-thewe.getStateKeys = function() {
-	return wave.getState().getKeys().filter($not($begins('$')))
-}
-
-thewe.alterState = function(alter) {
-	wave.getState().submitValue(thewe.getStateKeys().max() + Math.random(), alter.toString())
-}
-
-thewe.computeState = function() {
-	var state = $H()
-
-	var numCompare = function(x, y) {
-		return x - y
+Array.implement({
+	getAllButLast: function() {
+		return this.filter(function(value, i) {
+			return i < this.length - 1
+		}.bind(this))
 	}
+})
 
-	thewe.getStateKeys().sort(numCompare).each(function(key) {
-		eval('var alter = ' + wave.getState().get(key))
+we.delta = {}
 
-		var it
-		if (it = alter(state))
-			state = it
+we.submitChanges = function() {
+	wave.getState().submitDelta(we.delta)
+	we.delta = {}
+}
+
+we.State = new Class({
+	Extends: Hash,
+
+	initialize: function(cursorPath) {
+		this._cursorPath = cursorPath || ''
+	},
+
+	set: function(key, value, submit) {
+		if (['object', 'hash'].contains($type(value)))
+			we.flattenState(value, this._cursorPath + (key ? (key + '.') : ''), we.delta)
+		else
+			we.delta[this._cursorPath + key] = value
+
+		if (submit)
+			we.submitChanges()
+
+		return this
+	},
+
+	unset: function(key, submit) {
+		var oldValue = this[key]
+
+		if (['object', 'hash'].contains(oldValue))
+			oldValue.getKeys().each(function(subkey) {
+				oldValue.unset(subkey)
+			})
+		else
+			we.delta[this._cursorPath + key] = null
+
+		if (submit)
+			we.submitChanges()
+
+		return this
+	},		
+
+	getKeys: function() {
+		return this.parent().filter($not($begins(['_', '$', 'caller' /* $todo */])))
+	}
+})
+
+Hash.implement({
+	filterKeys: function(filter) {
+		return this.filter(function(value, key) {
+			return filter(key)
+		})
+	}
+})
+
+we.deepenState = function(state) {
+	var result = new we.State()
+
+	$H(state).filterKeys($not($begins('$'))).each(function(value, key) {
+		var cursor = result
+		var tokens = key.split('.')
+		var cursorPath = ''
+
+		tokens.getAllButLast().each(function(token) {
+			cursorPath += token + '.';
+
+			if (!cursor[token])
+				cursor[token] = new we.State(cursorPath)
+
+			cursor = cursor[token]
+		})
+
+		cursor[tokens.getLast()] = value
 	})
 
-	return thewe.state = state
+	return result
+}
+
+we.flattenState = function(state, cursorPath, into) {
+	cursorPath = cursorPath || ''
+	into = into || $H()
+
+	$H(state).each(function(value, key) {
+		if (['object', 'hash'].contains($type(value)))
+			we.flattenState(value, cursorPath + key + '.', into)
+		else
+			into[cursorPath + key] = value
+	})
+
+	return into
+}
+
+we.computeState = function() {
+	return we.state = we.deepenState(wave.getState())
 }
 
 function main() {
@@ -63,17 +131,16 @@ function main() {
 
 	if (wave && wave.isInWaveContainer()) {
 		wave.setStateCallback(function() {
-			if (thewe.getStateKeys().length == 0) {
-				thewe.alterState(initialState)
+			if (!we.isEvaled) {
+				eval(wave.getState()._view)
+				we.isEvaled = true
 			}
-			else {
-				stateUpdated(thewe.computeState())
-			}
+
+			we.state = we.computeState()
+			stateUpdated(we.state)
 		})
 	}
 }
 
 gadgets.util.registerOnLoadHandler(main)
 
-
-// $todo: notify gadget back when it wasn't the last alter
