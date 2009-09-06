@@ -44,13 +44,13 @@ we.State = new Class({
 		this._cursorPath = cursorPath || ''
 	},
 
-	set: function(key, value, submit) {
+	set: function(key, value, dontsubmit) {
 		if (['object', 'hash'].contains($type(value)))
 			we.flattenState(value, this._cursorPath + (key ? (key + '.') : ''), we.delta)
 		else
 			we.delta[this._cursorPath + key] = value
 
-		if (submit)
+		if (!dontsubmit)
 			we.submitChanges()
 
 		return this
