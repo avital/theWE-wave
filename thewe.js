@@ -130,13 +130,11 @@ function main() {
 	if (wave && wave.isInWaveContainer()) {
 		wave.setStateCallback(function() {
 			if (!we.isEvaled) {
-				eval(wave.getState()._view)
+				eval(wave.getState().get('_view'))
 				we.isEvaled = true
-				initialize()
 			}
 
-			we.state = we.computeState()
-			stateUpdated(we.state)
+			stateUpdated(we.computeState())
 		})
 	}
 }
