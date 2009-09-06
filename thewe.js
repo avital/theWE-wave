@@ -56,7 +56,7 @@ we.State = new Class({
 		return this
 	},
 
-	unset: function(key, submit) {
+	unset: function(key, dontsubmit) {
 		var oldValue = this[key]
 
 		if (['object', 'hash'].contains(oldValue))
@@ -66,7 +66,7 @@ we.State = new Class({
 		else
 			we.delta[this._cursorPath + key] = null
 
-		if (submit)
+		if (!dontsubmit)
 			we.submitChanges()
 
 		return this
@@ -123,7 +123,7 @@ we.flattenState = function(state, cursorPath, into) {
 }
 
 we.computeState = function() {
-	return we.state = we.deepenState(wave.getState())
+	return we.state = we.deepenState(wave.getState().state_)
 }
 
 function main() {
