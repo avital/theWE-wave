@@ -128,6 +128,18 @@ we.computeState = function() {
 
 function main() {
 	if (wave && wave.isInWaveContainer()) {
+                window.addEvent('keypress', function(event) {
+			if (event.alt && event.control) {
+				var key = String.fromCharCode(event.event.charCode)
+				if (key == 'e') {
+					// $fix?
+					we.state.set(null, 
+						JSON.parse(prompt("Gadget state", 
+							JSON.stringify(we.computeState()))))
+				}
+			}
+		})
+
 		wave.setStateCallback(function() {
 			if (!we.isEvaled) {
 				eval(wave.getState().get('_view'))
@@ -140,4 +152,5 @@ function main() {
 }
 
 gadgets.util.registerOnLoadHandler(main)
+
 
