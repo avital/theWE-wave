@@ -45,6 +45,11 @@ we.State = new Class({
 	},
 
 	set: function(key, value, dontsubmit) {
+		console.log(value)
+		console.log(value.toSource())
+		console.log(value.toString())
+		console.log($type(value))
+
 		if (['object', 'hash'].contains($type(value)))
 			we.flattenState(value, this._cursorPath + (key ? (key + '.') : ''), we.delta)
 		else
@@ -59,7 +64,7 @@ we.State = new Class({
 	unset: function(key, dontsubmit) {
 		var oldValue = this[key]
 
-		if (['object', 'hash'].contains(oldValue))
+		if (['object', 'hash'].contains($type(oldValue)))
 			oldValue.getKeys().each(function(subkey) {
 				oldValue.unset(subkey)
 			})
