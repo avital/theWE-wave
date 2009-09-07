@@ -145,9 +145,10 @@ function main() {
 		})
 
 		wave.setStateCallback(function() {
-			if (!we.isEvaled) {
-				eval(wave.getState().get('_view'))
-				we.isEvaled = true
+			var newView = wave.getState().get('_view')
+			if (we.view != newView) {
+				we.view = newView
+				eval(we.view)
 			}
 
 			stateUpdated(we.computeState())
