@@ -41,19 +41,18 @@ we.State = new Class({
 	Extends: Hash,
 
 	initialize: function(cursorPath) {
-		this._cursorPath = cursorPath || ''
+		if (cursorPath)
+			this._cursorPath = cursorPath
 	},
 
 	set: function(key, value, dontsubmit) {
-		console.log(value)
-		console.log(value.toSource())
-		console.log(value.toString())
-		console.log($type(value))
+		var type = $type(value) || 'object' // $fix!!!
+		var cursorPath = this._cursorPath || ''
 
-		if (['object', 'hash'].contains($type(value)))
-			we.flattenState(value, this._cursorPath + (key ? (key + '.') : ''), we.delta)
+		if (['object', 'hash'].contains(type))
+			we.flattenState(value, cursorPath + (key ? (key + '.') : ''), we.delta)
 		else
-			we.delta[this._cursorPath + key] = value
+			we.delta[cursorPath + key] = value
 
 		if (!dontsubmit)
 			we.submitChanges()
@@ -78,7 +77,7 @@ we.State = new Class({
 	},		
 
 	getKeys: function() {
-		return this.parent().filter($not($begins(['_', '$', 'caller' /* $todo */])))
+		return this.parent().filter($not($begins(['_', '$', 'caller' /* $fix */])))
 	}
 })
 
@@ -133,7 +132,7 @@ we.computeState = function() {
 
 function main() {
 	if (wave && wave.isInWaveContainer()) {
-                window.addEvent('keypress', function(event) {
+		window.addEvent('keypress', function(event) {
 			if (event.alt && event.control) {
 				var key = String.fromCharCode(event.event.charCode)
 				if (key == 'e') {
