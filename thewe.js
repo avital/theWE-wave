@@ -151,7 +151,10 @@ function main() {
 				eval(we.view)
 			}
 
-			stateUpdated(we.computeState())
+			var state = we.computeState()
+
+			if (typeof stateUpdated != 'undefined')
+				stateUpdated(state)
 		})
 	}
 }

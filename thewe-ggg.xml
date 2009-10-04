@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+	<ModulePrefs
+	title="theWE"
+	height="50"
+	description="theWE Generic Gadget Gadget"
+	author="Avital Oliver"
+	author_email="avital@thewe.net">
+		<Require feature="rpc"/>
+	</ModulePrefs>
+
+	<UserPref datatype="hidden" display_name="KEY" name="KEY" />
+
+	<Content type="html">
+		<![CDATA[
+			<script type="text/javascript" src="http://wave-api.appspot.com/public/wave.js"></script>
+			<script type="text/javascript" src="http://wave.thewe.net/gadgets/thewe-ggg/mootools-1.2.3-core.js"></script>
+			<script type="text/javascript" src="http://wave.thewe.net/gadgets/thewe-ggg/thewe.js"></script>
+		]]>
+	</Content>
+</Module>
