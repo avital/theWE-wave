@@ -1,3 +1,5 @@
+$extend(JSON, {stringify: JSON.encode, parse: JSON.decode})
+
 we = {}
 
 $not = function(f) {
@@ -31,6 +33,7 @@ Array.implement({
 })
 
 we.delta = {}
+we.view = {}
 
 we.submitChanges = function() {
 	wave.getState().submitDelta(we.delta)
@@ -127,7 +130,8 @@ we.flattenState = function(state, cursorPath, into) {
 }
 
 we.computeState = function() {
-	return we.state = we.deepenState(wave.getState().state_)
+	we.rawState = wave.getState().state_
+	return we.state = we.deepenState(we.rawState)
 }
 
 function main() {
@@ -144,17 +148,41 @@ function main() {
 			}
 		})
 
+		wave.setModeCallback(function() {
+			if (typeof modeChanged != 'undefined') {
+				modeChanged(we.lastMode, wave.getMode())
+				we.lastMode = wave.getMode()
+				gadgets.window.adjustHeight();
+			}
+		})
+
 		wave.setStateCallback(function() {
-			var newView = wave.getState().get('_view')
-			if (we.view != newView) {
+			var state = we.computeState()
+
+			var newView = state._view
+			if (state._view && (we.view.js != newView.js || we.view.html != newView.html || we.view.css != newView.css)) {
 				we.view = newView
-				eval(we.view)
+
+				$('content').set('html', we.view.html)
+				$('style').set('text', we.view.css)
+				eval(we.view.js)
 			}
 
-			var state = we.computeState()
+			$('content').getElements('[wethis]').each(function(el) {
+				var stateKey = el.getParents('[wecursor]').map(function(parent) {
+					return parent.getProperty('wecursor')
+				}).join('.')
+
+				var stateValue = we.rawState[stateKey]
+
+				el.set('text', stateValue)
+				el.set('value', stateValue)
+			})
 
 			if (typeof stateUpdated != 'undefined')
 				stateUpdated(state)
+
+			gadgets.window.adjustHeight();
 		})
 	}
 }

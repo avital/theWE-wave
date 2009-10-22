@@ -2,20 +2,23 @@
 <Module>
 	<ModulePrefs
 	title="theWE"
-	height="50"
+	height="200"
 	description="theWE Generic Gadget Gadget"
 	author="Avital Oliver"
 	author_email="avital@thewe.net">
 		<Require feature="rpc"/>
+		<Require feature="wave-preview"/>
+		<Require feature="dynamic-height"/>
 	</ModulePrefs>
-
-	<UserPref datatype="hidden" display_name="KEY" name="KEY" />
 
 	<Content type="html">
 		<![CDATA[
 			<script type="text/javascript" src="http://wave-api.appspot.com/public/wave.js"></script>
 			<script type="text/javascript" src="http://wave.thewe.net/gadgets/thewe-ggg/mootools-1.2.3-core.js"></script>
 			<script type="text/javascript" src="http://wave.thewe.net/gadgets/thewe-ggg/thewe.js"></script>
+
+			<style id="style" type="text/css"></style>
+			<div id="content"></div>
 		]]>
 	</Content>
 </Module>

@@ -1,0 +1,13 @@
+<extension 
+    name="Generic Gadget Gadget"
+    
+thumbnailUrl="http://google-wave-resources.googlecode.com/svn/trunk/samples/extensions/gadgets/mappy/screenshot_mapgadget.png"
+    description="BLA BLA"> 
+  <author name="theWE"/> 
+  <menuHook location="toolbar" text="Add Generic Gadget Gadget"
+      
+iconUrl="https://wave-api.appspot.com/public/images/insertMap.png"> 
+    <insertGadget 
+url="http://wave.thewe.net/gadgets/thewe-ggg/thewe-ggg.xml"/> 
+  </menuHook> 
+</extension> 
