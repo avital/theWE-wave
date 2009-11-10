@@ -163,9 +163,12 @@ function main() {
 			if (state._view && (we.view.js != newView.js || we.view.html != newView.html || we.view.css != newView.css)) {
 				we.view = newView
 
+				
 				$('content').set('html', we.view.html)
 				$('style').set('text', we.view.css)
 				eval(we.view.js)
+				modeChanged(we.lastMode, wave.getMode())
+				we.lastMode = wave.getMode()
 			}
 
 			$('content').getElements('[wethis]').each(function(el) {
