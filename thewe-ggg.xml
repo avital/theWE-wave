@@ -14,34 +14,52 @@
 	<Content type="html">
 		<![CDATA[
 			<script type="text/javascript" src="http://wave-api.appspot.com/public/wave.js"></script>
-			<script type="text/javascript" src="http://wave.thewe.net/gadgets/thewe-ggg/mootools-1.2.3-core.js"></script>
+			<script type="text/javascript" src="http://wave.thewe.net/gadgets/thewe-ggg/mootools-1.2.4-core-nc.js"></script>
+			<script type="text/javascript" src="http://wave.thewe.net/gadgets/thewe-ggg/mootools-1.2.4.2-more.js"></script>
 			<script type="text/javascript" src="http://wave.thewe.net/gadgets/thewe-ggg/thewe.js"></script>
 
 			<style type="text/css">
-/* reset.css */
-html, body, div, span, object, iframe, h1, h2, h3, h4, h5, h6, p, 
-blockquote, pre, a, abbr, acronym, address, code, del, dfn, em, img, q, 
-dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, 
-tbody, tfoot, thead, tr, th, td 
-{margin:0;padding:0;border:0;font-weight:inherit;font-style:inherit;font-size:100%;font-family:inherit;vertical-align:baseline;}
-body {line-height:1.5;}
-table {border-collapse:separate;border-spacing:0;}
-caption, th, td {text-align:left;font-weight:normal;}
-table, td, th {vertical-align:middle;}
-blockquote:before, blockquote:after, q:before, q:after {content:"";}
-blockquote, q {quotes:"" "";}
-a img {border:none;}
+			  /* reset.css */
+			  html, body, div, span, object, iframe, h1, h2, h3, h4, h5, h6, p, 
+			  blockquote, pre, a, abbr, acronym, address, code, del, dfn, em, img, q, 
+			  dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, 
+			  tbody, tfoot, thead, tr, th, td 
+			  {margin:0;padding:0;border:0;font-weight:inherit;font-style:inherit;font-size:100%;font-family:inherit;vertical-align:baseline;}
+			  body {line-height:1.5;}
+			  table {border-collapse:separate;border-spacing:0;}
+			  caption, th, td {text-align:left;font-weight:normal;}
+			  table, td, th {vertical-align:middle;}
+			  blockquote:before, blockquote:after, q:before, q:after {content:"";}
+			  blockquote, q {quotes:"" "";}
+			  a img {border:none;}
 
-			body {
-				font-family: arial, sans-serif;
-				font-size: small;
-				line-height: 1.35;
-			}
-
+			  body {
+			    font-family: arial, sans-serif;
+			    font-size: small;
+			    line-height: 1.35;
+			  }
+			  
+			  [weid=edit-key] {
+			    font-weight: bold;
+			  }
+			  
+			  [weid=edit-value] {
+			    width: 100%;
+			    height: 10em;
+			  }
 			</style>
 
 			<style id="style" type="text/css"></style>
 			<div id="content"></div>
+			<div id="edit" style="display: none;">
+			  <hr>
+			  <span id="prototypes" style="display: none;">
+			    <div id="edit-prototype">
+			      <div weid="edit-key"></div>
+			      <textarea weid="edit-value"></textarea>
+			    </div>
+			  </span>
+			</div>
 		]]>
 	</Content>
 </Module>
