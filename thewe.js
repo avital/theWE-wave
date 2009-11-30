@@ -47,40 +47,39 @@ we.submitChanges = function() {
 };
 
 we.State = new Class({
-        Extends: Hash,
-
         initialize: function(cursorPath) {
-                if (cursorPath) {
-                        this._cursorPath = cursorPath;
-                }
+	    this.$cursorPath = cursorPath;
         },
 
         set: function(key, value, dontsubmit) {
-                var type = $type(value) || 'object'; // $fix!!!
-                var cursorPath = this._cursorPath || '';
+	    this[key] = value;
 
-                if (['object', 'hash'].contains(type))
-                        we.flattenState(value, cursorPath + (key ? (key + '.') : ''), we.delta);
+	    if (!(this.$cursorPath == null)) {
+                var cursorPath = this.$cursorPath;
+
+		if ($type(value) == 'object')
+		    we.flattenState(value, cursorPath + (key ? (key + '.') : ''), we.delta);
                 else
-                        we.delta[cursorPath + key] = value;
-
+		    we.delta[cursorPath + key] = value;
+		
                 if (!dontsubmit) {
-                        we.submitChanges();
+		    we.submitChanges();
                 }
+	    }
 
-                return this;
+	    return this;
         },
 
         unset: function(key, dontsubmit) {
                 var oldValue = this[key];
 
-                if (['object', 'hash'].contains($type(oldValue))) {
+                if ($type(oldValue) == 'object') {
                         oldValue.getKeys().each(function(subkey) {
 	                        oldValue.unset(subkey);
                         });
                 }
                 else {
-                        we.delta[this._cursorPath + key] = null;
+                        we.delta[this.$cursorPath + key] = null;
                     }
 
                 if (!dontsubmit) {
@@ -90,26 +89,50 @@ we.State = new Class({
                 return this;
         },
 
-	clean: function() {
-	    var result = this;
-	    delete result._cursorPath;
-	    delete result.$family;
-	    delete result.caller;
-	    
-	    result.each(
-			function(value, key) {
-			    if (['hash'].contains($type(value))) {
-				result[key] = result[key].clean();
-			    }
-			});
+	getKeys: function() {
+	    var result = [];
 
-	    return result.getClean();
+	    for (var x in this) 
+		if (x != 'caller' && !(x.beginsWith('$')) && !(x.beginsWith('_')) && !(this[x] instanceof Function)) /* $fix? */
+		    result.push(x);
+
+	    return result;
 	},
 
-        getKeys: function() {
-                return this.parent().filter($not($begins(['_', '$', 'caller' /* $fix */])));
-        }
+
+	////////////////////////////
+	// Elastic List Functions //
+	////////////////////////////
+	getAsArray: function() {
+	    return this.getKeys().sort(function(a, b) {
+		    return parseInt(this[a].position) > parseInt(this[b].position) ? 1 : -1;
+		}).map(function(key) {
+			return this[key].value;
+		    });
+	},
+
+	insertAtPosition: function(pos, val) {
+	    var itemId = '' + $random(0, 100000000);
+	    return this.set(itemId, {
+		    position: '' + pos,
+			value: '' + val
+			});
+	},
+
+	append: function(val) {
+	    var self = this;
+	    var newPosition = between(self.getKeys().map(function(key) { return parseInt(self[key].position) }).max(), 100000000000);
+	    return this.insertAtPosition(newPosition, val);
+	}
 });
+
+between = function(x, y) {
+    if (x == -Infinity)
+	x = 0;
+
+    return $random(x, y);
+};
+
 
 Hash.implement({
         filterKeys: function(filter) {
@@ -120,7 +143,7 @@ Hash.implement({
 });
 
 we.deepenState = function(state) {
-        var result = new we.State();
+        var result = new we.State('');
 
         $H(state).filterKeys($not($begins('$'))).each(function(value, key) {
                 var cursor = result;
@@ -131,7 +154,7 @@ we.deepenState = function(state) {
                         cursorPath += token + '.';
 
                         if (!cursor[token]) {
-	                        cursor[token] = new we.State(cursorPath);
+			    cursor[token] = new we.State(cursorPath);
                         }
 
                         cursor = cursor[token];
@@ -145,10 +168,10 @@ we.deepenState = function(state) {
 
 we.flattenState = function(state, cursorPath, into) {
         cursorPath = cursorPath || '';
-        into = into || $H();
+        into = into || {};
 
-        $H(state).each(function(value, key) {
-                if (['object', 'hash'].contains($type(value) || 'object' /* $fix */))
+        $H(state).filterKeys($not($begins('$'))).each(function(value, key) {
+                if ($type(value) == 'object')
                         we.flattenState(value, cursorPath + key + '.', into);
                 else
                         into[cursorPath + key] = value;
@@ -174,52 +197,14 @@ function weModeChanged() {
         }
 }
 
-doWithState = function(newState, f) {
-    var oldState = state;
-    state = newState;
-    
-    try {
-	f();
-    }    
-    finally {
-	state = oldState;
-    }
-};
-
-applyViewToElement = function(el, substate, view) {
-    el.set('html', view.html);
-    
-    doWithState(substate, 
-		function() {
-		    eval(view.js);
-		});
-}; 
-
 function weStateUpdated() {
         state = we.computeState();
 
-        var newView = state._view;
-        if (state._view && (we.view.js != newView.js || we.view.html != newView.html || we.view.css != newView.css)) {
-                we.view = newView;
-		applyViewToElement($('content'), state, we.view);
+        if (we.code != state._code) {
+                we.code = state._code;
+		eval(we.code);
                 weModeChanged();
         }
-
-        $('content').getElements('[wethis]').each(function(el) {
-		var cursor = we.state;
-
-                var stateKey = el.getParents('[wecursor]').reverse().map(function(parent) {
-                        cursor = cursor[parent.getProperty('wecursor')];
-                });
-
-		if ($type(cursor) == 'hash') {
-		    
-		}
-		else if ($type(cursor) == 'string') {
-		    el.set('text', cursor);
-		    el.set('value', cursor);
-		}
-        });
 
         if (typeof stateUpdated != 'undefined') {
                 stateUpdated(state);
@@ -236,7 +221,7 @@ function main() {
 	                        var key = String.fromCharCode(event.event.charCode);
 
 	                        if (key == 's') {
-				    alert(js_beautify(JSON.stringify(we.state.clean()), {indent_size: 4, indent_char: ' ', preserve_newlines: false}));
+				    alert(js_beautify(JSON.stringify(we.state), {indent_size: 4, indent_char: ' ', preserve_newlines: false}));
 	                        }
 
 	                        if (key == 'o') {
@@ -244,6 +229,10 @@ function main() {
 	                                        prompt("Key"),
 	                                        prompt("Value"));
 	                        }
+
+				if (key == 'e') {
+				    alert(eval(prompt("eval")));
+				}
                         }
                 });
 
