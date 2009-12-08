@@ -35,23 +35,83 @@ Array.implement({
 Element.implement({
         $we: function(weid) {
                 return this.getElement('[weid=' + weid + ']');
-        }
-});
+        },
+
+	    hide: function() {
+	    this.setStyle('display', 'none');
+	},
+
+	    show: function() {
+	    this.setStyle('display', '');
+	}
+    });
 
 we.delta = {};
 we.view = {};
 
+
 we.submitChanges = function() {
         wave.getState().submitDelta(we.delta);
         we.delta = {};
+	we.inTransaction = false;
 };
+
+we.startTransaction = function() {
+    we.inTransaction = true;
+};
+
+we.setMixinName = function(name) {
+    we.mixinState.set('_name', name);
+};
+
+
+var FuncArray = function() {
+    var result = [];
+
+    result.run = function() {
+	var args = arguments;
+	this.each(function(item) {
+		item.run(args);
+	    });
+    };
+
+    return result;
+};
+
 
 we.State = new Class({
         initialize: function(cursorPath) {
 	    this.$cursorPath = cursorPath;
         },
 
-        set: function(key, value, dontsubmit) {
+	getClean: function() {
+	    var result = {};
+	    var self = this;
+
+	    self.getKeys().each(function(key) {
+		    var val = self[key];
+
+		    if ($type(val) == 'object')
+			val = val.getClean();
+ 
+		    result[key] = val;
+		});
+
+	    return result;
+	},
+
+	get: function(key) {
+	    var result = this[key];
+
+	    if (result == null) {
+		we.state.set('blip-rep-keys', this.$cursorPath + key, true);
+		this.set(key, '');
+	    }
+
+	    return result;
+	},
+
+        set: function(key, value) {
 	    this[key] = value;
 
 	    if (!(this.$cursorPath == null)) {
@@ -62,7 +122,7 @@ we.State = new Class({
                 else
 		    we.delta[cursorPath + key] = value;
 		
-                if (!dontsubmit) {
+                if (!we.inTransaction) {
 		    we.submitChanges();
                 }
 	    }
@@ -70,7 +130,7 @@ we.State = new Class({
 	    return this;
         },
 
-        unset: function(key, dontsubmit) {
+        unset: function(key) {
                 var oldValue = this[key];
 
                 if ($type(oldValue) == 'object') {
@@ -82,7 +142,7 @@ we.State = new Class({
                         we.delta[this.$cursorPath + key] = null;
                     }
 
-                if (!dontsubmit) {
+                if (!we.inTransaction) {
                         we.submitChanges();
                 }
 
@@ -93,7 +153,7 @@ we.State = new Class({
 	    var result = [];
 
 	    for (var x in this) 
-		if (x != 'caller' && !(x.beginsWith('$')) && !(x.beginsWith('_')) && !(this[x] instanceof Function)) /* $fix? */
+		if (x != 'caller' && x != '_current' && x != '_context' && !(x.beginsWith('$')) && !(this[x] instanceof Function)) /* $fix? */
 		    result.push(x);
 
 	    return result;
@@ -103,26 +163,27 @@ we.State = new Class({
 	////////////////////////////
 	// Elastic List Functions //
 	////////////////////////////
-	getAsArray: function() {
-	    return this.getKeys().sort(function(a, b) {
-		    return parseInt(this[a].position) > parseInt(this[b].position) ? 1 : -1;
+	asArray: function() {
+	    var self = this;
+
+	    return self.getKeys().sort(function(a, b) {
+		    return parseInt(self[a].position) > parseInt(self[b].position) ? 1 : -1;
 		}).map(function(key) {
-			return this[key].value;
+			return self[key];
 		    });
 	},
 
 	insertAtPosition: function(pos, val) {
 	    var itemId = '' + $random(0, 100000000);
-	    return this.set(itemId, {
-		    position: '' + pos,
-			value: '' + val
-			});
+	    this.set(itemId, $merge({_position: '' + pos}, val));
+	    return this.$cursorPath + itemId;
 	},
 
 	append: function(val) {
+	    val = val || {};
 	    var self = this;
-	    var newPosition = between(self.getKeys().map(function(key) { return parseInt(self[key].position) }).max(), 100000000000);
-	    return this.insertAtPosition(newPosition, val);
+	    var newPosition = between(self.getKeys().map(function(key) { return parseInt(self[key]._position) }).max(), 100000000000);
+	    return self.insertAtPosition(newPosition, val);
 	}
 });
 
@@ -189,30 +250,73 @@ we.computeState = function() {
         }
 };
 
+modeChanged = new FuncArray();
+
 function weModeChanged() {
         if (typeof modeChanged != 'undefined') {
-                modeChanged(we.lastMode, wave.getMode());
-                we.lastMode = wave.getMode();
-                gadgets.window.adjustHeight();
+	    modeChanged.run(we.lastMode, wave.getMode());
+	    we.lastMode = wave.getMode();
+	    gadgets.window.adjustHeight();
         }
 }
 
+we.$ = function(id) {
+    return we.el.getElementById(id);
+}
+
+function applyMixinsToElement(mixins, el) {
+    var baseMixinCtxsByName = {};
+
+    mixins.asArray().each(function(mixinState) {
+	    if (mixinState._code) {
+		we.mixinCtx = mixinState._context = {state: mixinState};
+		we.mixinState = mixinState;
+		we.el = el;	       
+		eval(we.mixin.state._code);
+
+		if (mixinState._name) {
+		    baseMixinCtxsByName[_name] = mixinCtx;
+		}
+	    }
+	});
+}
+
+msg = null;
+debug = false;
+
+function debugState() {
+	if (debug) {
+	    if (!msg)  {
+		msg = new gadgets.MiniMessage("http://wave.thewe.net/gadgets/thewe-ggg/thewe-ggg.xml", $('messageBox'));
+	    }
+
+	    // for debug
+	    msg.createDismissibleMessage(JSON.stringify(we.rawState));
+	}
+}
+
 function weStateUpdated() {
+    alert(1);
+
         state = we.computeState();
 
-        if (we.code != state._code) {
-                we.code = state._code;
-		eval(we.code);
+	/* $fix - see what actually changed */
+        if (we.mixins != state._mixins) {
+                we.mixins = state._mixins;
+		$('content').empty();
+		modeChanged.empty();
+		applyMixinsToElement(we.mixins, $('content'));
                 weModeChanged();
         }
 
         if (typeof stateUpdated != 'undefined') {
                 stateUpdated(state);
         }
+	
+	debugState();
 
         gadgets.window.adjustHeight();
 }
-
 
 function main() {
         if (wave && wave.isInWaveContainer()) {
@@ -221,7 +325,7 @@ function main() {
 	                        var key = String.fromCharCode(event.event.charCode);
 
 	                        if (key == 's') {
-				    alert(js_beautify(JSON.stringify(we.state), {indent_size: 4, indent_char: ' ', preserve_newlines: false}));
+				    alert(js_beautify(JSON.stringify(we.state.getClean()), {indent_size: 4, indent_char: ' ', preserve_newlines: false}));
 	                        }
 
 	                        if (key == 'o') {
@@ -232,6 +336,30 @@ function main() {
 
 				if (key == 'e') {
 				    alert(eval(prompt("eval")));
+				}
+
+				if (key == 'b') {
+				    debug = !debug;
+				    debugState();
+				}
+
+				if (key == 'm') {
+				    we.startTransaction();
+
+				    var mixinName = prompt("Use an existing mixin? If so, what is its name?");
+
+				    if (!we.state._mixins)
+					we.state.set('_mixins', new we.State('_mixins.')); // $fix - should this be {} instead of new we.State()?
+
+				    var newMixinId = we.state._mixins.append() + '._code';
+
+				    if (mixinName)
+					we.state.set('mixin-rep-key', JSON.stringify({key: newMixinId, mixinName: mixinName}));
+				    else {
+					we.state.set('blip-rep-keys', newMixinId);
+				    }
+
+				    we.submitChanges();
 				}
                         }
                 });

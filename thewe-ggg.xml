@@ -9,6 +9,7 @@
 		<Require feature="rpc"/>
 		<Require feature="wave-preview"/>
 		<Require feature="dynamic-height"/>
+		<Require feature="minimessage" />
 	</ModulePrefs>
 
 	<Content type="html">
@@ -39,10 +40,16 @@
 			    font-size: small;
 			    line-height: 1.35;
 			  }
+
+			  #sandbox {
+			    display: none;
+			  }
 			</style>
 
 			<style id="style" type="text/css"></style>
 			<span id="content"></span>
+			<span id="sandbox"></span>
+			<div id="messageBox" width="50px"></div>
 		]]>
 	</Content>
 </Module>
